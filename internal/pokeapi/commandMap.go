@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/felixsolom/pokedexcli/internal/pokecache"
 )
 
 type Config struct {
@@ -17,27 +19,38 @@ type Config struct {
 	} `json:"results"`
 }
 
-func CommandMap(config *Config) error {
+func CommandMap(config *Config, cache *pokecache.Cache) error {
 	url := config.Next
 	if url == "" {
 		url = "https://pokeapi.co/api/v2/location-area"
 	}
-	res, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("error message: %v", err)
+
+	var body []byte
+	entry, exists := cache.Get(url)
+	if exists {
+		body = entry
+	} else {
+		res, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("error message: %v", err)
+		}
+
+		defer res.Body.Close()
+
+		body, err = io.ReadAll(res.Body)
+
+		if res.StatusCode > 299 {
+			return fmt.Errorf("response failed with status code %d, and\nbody %s", res.StatusCode, body)
+		}
+		if err != nil {
+			return fmt.Errorf("error message: %v", err)
+		}
+
+		cache.Add(url, body)
+
 	}
 
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-
-	if res.StatusCode > 299 {
-		return fmt.Errorf("response failed with status code %d, and\nbody %s", res.StatusCode, body)
-	}
-	if err != nil {
-		return fmt.Errorf("error message: %v", err)
-	}
-	err = json.Unmarshal(body, config)
+	err := json.Unmarshal(body, config)
 	if err != nil {
 		return fmt.Errorf("error message: %v", err)
 	}
@@ -47,28 +60,38 @@ func CommandMap(config *Config) error {
 	return nil
 }
 
-func CommandMapb(config *Config) error {
+func CommandMapb(config *Config, cache *pokecache.Cache) error {
 	url := config.Previous
 	if url == "" {
 		fmt.Println("you're on the first page")
 		return nil
 	}
-	res, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("error message: %v", err)
+	var body []byte
+	entry, exists := cache.Get(url)
+	if exists {
+		body = entry
+	} else {
+		res, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("error message: %v", err)
+		}
+
+		defer res.Body.Close()
+
+		body, err := io.ReadAll(res.Body)
+
+		if res.StatusCode > 299 {
+			return fmt.Errorf("response failed with status code %d, and\nbody %s", res.StatusCode, body)
+		}
+		if err != nil {
+			return fmt.Errorf("error message: %v", err)
+		}
+
+		cache.Add(url, body)
+
 	}
 
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-
-	if res.StatusCode > 299 {
-		return fmt.Errorf("response failed with status code %d, and\nbody %s", res.StatusCode, body)
-	}
-	if err != nil {
-		return fmt.Errorf("error message: %v", err)
-	}
-	err = json.Unmarshal(body, config)
+	err := json.Unmarshal(body, config)
 	if err != nil {
 		return fmt.Errorf("error message: %v", err)
 	}

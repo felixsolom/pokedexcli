@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
+	cache := pokecache.NewCache(5 * time.Second)
 	config := &pokeapi.Config{}
-	startRepl(config)
-	pokecache.NewCache(5 * time.Second)
+	startRepl(config, cache)
+	cache.Shutdown()
 }

@@ -46,7 +46,7 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	return entry.val, true
 }
 
-func c(c *Cache) reapLoop() {
+func (c *Cache) reapLoop() {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 
@@ -55,7 +55,7 @@ func c(c *Cache) reapLoop() {
 		case <-ticker.C:
 			c.reap()
 		case <-c.stopChan:
-			return 
+			return
 		}
 	}
 }
@@ -63,7 +63,7 @@ func c(c *Cache) reapLoop() {
 func (c *Cache) reap() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	cutoff := time.Now().Add(-c.interval) 
+	cutoff := time.Now().Add(-c.interval)
 	for key, entry := range c.store {
 		if entry.createdAt.Before(cutoff) {
 			delete(c.store, key)

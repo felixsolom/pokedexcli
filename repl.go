@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/felixsolom/pokedexcli/internal/pokeapi"
+	"github.com/felixsolom/pokedexcli/internal/pokecache"
 )
 
 func getCommands() map[string]cliCommamd {
@@ -34,7 +35,7 @@ func getCommands() map[string]cliCommamd {
 	}
 }
 
-func startRepl(config *pokeapi.Config) {
+func startRepl(config *pokeapi.Config, cache *pokecache.Cache) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -46,7 +47,7 @@ func startRepl(config *pokeapi.Config) {
 		commandWord := input[0]
 		command, exists := getCommands()[commandWord]
 		if exists {
-			err := command.callback(config)
+			err := command.callback(config, cache)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -61,7 +62,7 @@ func startRepl(config *pokeapi.Config) {
 type cliCommamd struct {
 	name        string
 	description string
-	callback    func(*pokeapi.Config) error
+	callback    func(*pokeapi.Config, *pokecache.Cache) error
 }
 
 func cleanInput(text string) []string {
@@ -70,13 +71,13 @@ func cleanInput(text string) []string {
 	return sliced_strs
 }
 
-func commandExit(_ *pokeapi.Config) error {
+func commandExit(_ *pokeapi.Config, _ *pokecache.Cache) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(_ *pokeapi.Config) error {
+func commandHelp(_ *pokeapi.Config, _ *pokecache.Cache) error {
 	output := ""
 	for _, entry := range getCommands() {
 		output += fmt.Sprintf("%s: %s\n", entry.name, entry.description)
