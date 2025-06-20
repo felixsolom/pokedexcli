@@ -58,6 +58,11 @@ func getCommands(config *pokeapi.Config, cache *pokecache.Cache) map[string]cliC
 				return pokeapi.CommandCatch(name, cache, args)
 			},
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Inspects already caught pokemon",
+			callback:    pokeapi.CommandInspect,
+		},
 	}
 }
 

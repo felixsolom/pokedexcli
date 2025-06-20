@@ -12,3 +12,10 @@ func AddToPokedex(name string, pokemon PokemonStruct) {
 	defer pokedexMu.Unlock()
 	pokedex[name] = pokemon
 }
+
+func GetFromPokedex(name string) (PokemonStruct, bool) {
+	pokedexMu.RLock()
+	defer pokedexMu.RUnlock()
+	pokemon, exists := pokedex[name]
+	return pokemon, exists
+}
