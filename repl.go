@@ -50,6 +50,14 @@ func getCommands(config *pokeapi.Config, cache *pokecache.Cache) map[string]cliC
 				return pokeapi.CommandExplore(location, cache, args)
 			},
 		},
+		"catch": {
+			name:        "catch",
+			description: "Attempting to catch a specific pokemon",
+			callback: func(args []string) error {
+				name := &pokeapi.PokemonStruct{}
+				return pokeapi.CommandCatch(name, cache, args)
+			},
+		},
 	}
 }
 
