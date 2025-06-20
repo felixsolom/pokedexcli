@@ -19,10 +19,10 @@ type Config struct {
 	} `json:"results"`
 }
 
-func CommandMap(config *Config, cache *pokecache.Cache) error {
+func CommandMap(config *Config, cache *pokecache.Cache, _ []string) error {
 	url := config.Next
 	if url == "" {
-		url = "https://pokeapi.co/api/v2/location-area"
+		url = baseAPI + "location-area"
 	}
 
 	var body []byte
@@ -60,7 +60,7 @@ func CommandMap(config *Config, cache *pokecache.Cache) error {
 	return nil
 }
 
-func CommandMapb(config *Config, cache *pokecache.Cache) error {
+func CommandMapb(config *Config, cache *pokecache.Cache, _ []string) error {
 	url := config.Previous
 	if url == "" {
 		fmt.Println("you're on the first page")

@@ -10,7 +10,13 @@ import (
 	"github.com/felixsolom/pokedexcli/internal/pokecache"
 )
 
-func getCommands() map[string]cliCommamd {
+type cliCommamd struct {
+	name        string
+	description string
+	callback    func(args []string) error
+}
+
+func getCommands(config *pokeapi.Config, cache *pokecache.Cache) map[string]cliCommamd {
 	return map[string]cliCommamd{
 		"exit": {
 			name:        "exit",
@@ -25,18 +31,31 @@ func getCommands() map[string]cliCommamd {
 		"map": {
 			name:        "map",
 			description: "Displays next 20 location areas",
-			callback:    pokeapi.CommandMap,
+			callback: func(args []string) error {
+				return pokeapi.CommandMap(config, cache, args)
+			},
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Displays previous 20 location areas",
-			callback:    pokeapi.CommandMapb,
+			callback: func(args []string) error {
+				return pokeapi.CommandMapb(config, cache, args)
+			},
+		},
+		"explore": {
+			name:        "explore",
+			description: "Displays all pokemons found in specified area",
+			callback: func(args []string) error {
+				location := &pokeapi.LocationAreaNameID{}
+				return pokeapi.CommandExplore(location, cache, args)
+			},
 		},
 	}
 }
 
 func startRepl(config *pokeapi.Config, cache *pokecache.Cache) {
 	scanner := bufio.NewScanner(os.Stdin)
+	commands := getCommands(config, cache)
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
@@ -45,9 +64,13 @@ func startRepl(config *pokeapi.Config, cache *pokecache.Cache) {
 			continue
 		}
 		commandWord := input[0]
-		command, exists := getCommands()[commandWord]
+		args := []string{}
+		if len(input) > 1 {
+			args = input[1:]
+		}
+		command, exists := commands[commandWord]
 		if exists {
-			err := command.callback(config, cache)
+			err := command.callback(args)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -59,27 +82,21 @@ func startRepl(config *pokeapi.Config, cache *pokecache.Cache) {
 	}
 }
 
-type cliCommamd struct {
-	name        string
-	description string
-	callback    func(*pokeapi.Config, *pokecache.Cache) error
-}
-
 func cleanInput(text string) []string {
 	lower_str := strings.ToLower(text)
 	sliced_strs := strings.Fields(lower_str)
 	return sliced_strs
 }
 
-func commandExit(_ *pokeapi.Config, _ *pokecache.Cache) error {
+func commandExit(args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(_ *pokeapi.Config, _ *pokecache.Cache) error {
+func commandHelp(args []string) error {
 	output := ""
-	for _, entry := range getCommands() {
+	for _, entry := range getCommands(nil, nil) {
 		output += fmt.Sprintf("%s: %s\n", entry.name, entry.description)
 	}
 	fmt.Println("Welcome to the Pokedex!")
